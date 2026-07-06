@@ -1,0 +1,141 @@
+# API de Gerenciamento de Veículos
+
+Esta é uma API desenvolvida em **Spring Boot 3.3** para o gerenciamento de veículos, integrada ao **PostgreSQL** para persistência de dados e ao **Redis** para cache dinâmico de cotações de moedas externas.
+
+A aplicação conta com autenticação baseada em **OAuth2/JWT**, documentação interativa via **Swagger UI** e cobertura automatizada de testes com **JaCoCo (≥ 75%)**.
+
+---
+
+## Pré-requisitos
+
+Antes de começar, certifique-se de ter instalado em sua máquina:
+* **Java 21**
+* **Docker Desktop**
+
+---
+
+## Como Executar a Aplicação
+
+### 1. Subir a Infraestrutura (Banco e Cache)
+No terminal, navegue até a raiz do projeto onde está o arquivo `docker-compose.yml` e execute:
+```bash
+docker-compose up -d
+Este comando vai subir o contêiner do PostgreSQL (veiculos-db) e do Redis (veiculos-cache) em segundo plano.
+
+2. Rodar a Aplicação Spring Boot
+Com os contêineres rodando, abra o terminal na raiz do projeto e execute o comando de acordo com o seu sistema operacional:
+
+No Windows (PowerShell/CMD):
+
+Bash
+.\mvnw.cmd spring-boot:run
+No Linux / macOS:
+
+Bash
+./mvnw spring-boot:run
+A API estará disponível em: http://localhost:8080
+
+---
+
+## 🔐 Facilitador de Testes no Swagger (Sem Token JWT)
+
+Por padrão, a API exige autenticação via Token JWT para os métodos de escrita. Caso você queira testar os endpoints livremente através do Swagger UI sem precisar gerar ou configurar tokens:
+
+1. Abra o arquivo localizado em:
+   `src/main/java/com/exemplo/veiculos/config/SecurityConfig.java`
+
+2. Para **desativar** a exigência de tokens e liberar as rotas:
+   * **Comente** todo o bloco demarcado como `MODO 1` (linhas do fluxo do `oauth2ResourceServer`).
+   * **Descomente** o bloco demarcado como `MODO 2` (linhas do fluxo `.anyRequest().permitAll()`).
+
+3. Para **reativar** a segurança real do projeto:
+   * **Comente** o bloco do `MODO 2`.
+   * **Descomente** o bloco do `MODO 1`.
+
+*Nota: Lembre-se de reiniciar a aplicação (`.\mvnw.cmd spring-boot:run`) após salvar a alteração no arquivo para que o Spring Boot aplique as novas regras.*
+
+Como Testar a API (Endpoint por Endpoint)
+Opção 1: Via Swagger UI (Interface Gráfica) (Não recomendo, não está funcionando 100%)
+Acesse pelo navegador:
+👉 http://localhost:8080/swagger-ui/index.html
+
+Nota de Segurança: Os endpoints possuem regras de perfis (ROLE_ADMIN e ROLE_USER). Caso queira testar a escrita, certifique-se de usar a brecha de desenvolvimento configurada na API.
+
+Opção 2: Via Postman / Insomnia / cURL
+1. Cadastrar Veículo (Exige perfil ADMIN)
+Método: POST
+
+URL: http://localhost:8080/veiculos
+
+Payload (JSON):
+
+JSON
+{
+  "placa": "OFT8X32",
+  "marca": "Toyota",
+  "modelo": "Corolla",
+  "ano": 2024,
+  "cor": "Prata",
+  "preco": 150000.00
+}
+Ao enviar o valor em Reais (BRL), a API busca a cotação atual do dólar e salva o valor convertido no banco automaticamente.
+
+2. Listagem com Filtros Dinâmicos e Paginação (Exige perfil USER ou ADMIN)
+Método: GET
+
+URL: http://localhost:8080/veiculos?page=0&size=5&sort=preco,desc&marca=Toyota
+
+Os parâmetros page, size, sort e os filtros de características como marca ou cor são opcionais.
+
+3. Atualizar Dados (Exige perfil ADMIN)
+Método: PUT
+
+URL: http://localhost:8080/veiculos/1
+
+Payload (JSON):
+
+JSON
+{
+  "placa": "OFT8X32",
+  "marca": "Toyota",
+  "modelo": "Corolla XEI",
+  "ano": 2024,
+  "cor": "Preto",
+  "preco": 155000.00
+}
+4. Exclusão Lógica - Soft Delete (Exige perfil ADMIN)
+Método: DELETE
+
+URL: http://localhost:8080/veiculos/1
+
+O veículo não é deletado do banco de dados física ou permanentemente; apenas o atributo ativo passa a ser false, ocultando-o de futuras listagens.
+
+Verificando o Cache do Redis
+Para garantir que a aplicação está cacheando a cotação das APIs externas por 30 minutos:
+
+Abra o terminal e inspecione o contêiner do Redis:
+
+Bash
+docker exec -it veiculos-cache redis-cli
+Veja as chaves salvas:
+
+Plaintext
+keys *
+Consulte o tempo restante de vida do cache (TTL):
+
+Plaintext
+ttl cotacaoDolar::atual
+Testes Automatizados e Cobertura (JaCoCo)
+Para rodar a suite completa de testes unitários e de integração (E2E) através do Maven Wrapper, utilize:
+
+No Windows (PowerShell/CMD):
+
+Bash
+.\mvnw.cmd clean test
+No Linux / macOS:
+
+Bash
+./mvnw clean test
+Visualizar o Relatório de Cobertura
+Após a execução dos testes, abra o arquivo abaixo no seu navegador para conferir as métricas de linhas e ramificações (branches):
+target/site/jacoco/index.html
