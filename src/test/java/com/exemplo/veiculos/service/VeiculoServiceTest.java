@@ -227,15 +227,17 @@ class VeiculoServiceTest {
     }
 
     @Test
-    void deveDeletarVeiculoComSucesso() {
-        // Cenário
+    void deveAplicarSoftDeleteComSucesso() {
         Long idExistente = 1L;
-        var veiculo = Veiculo.builder().id(idExistente).build();
+        var veiculo = Veiculo.builder().id(idExistente).ativo(true).build();
         when(repository.findById(idExistente)).thenReturn(Optional.of(veiculo));
+        when(repository.save(any(Veiculo.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         veiculoService.deletar(idExistente);
-    
-        verify(repository, times(1)).delete(veiculo);
+
+        assertThat(veiculo.getAtivo()).isFalse();
+        verify(repository, times(1)).save(veiculo);
+        verify(repository, never()).delete(any(Veiculo.class));
     }
 
 }

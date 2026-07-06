@@ -37,7 +37,7 @@ A API estará disponível em: http://localhost:8080
 
 ---
 
-## 🔐 Facilitador de Testes no Swagger (Sem Token JWT)
+## 🔐 Facilitador de Testes (Sem Token JWT)
 
 Por padrão, a API exige autenticação via Token JWT para os métodos de escrita. Caso você queira testar os endpoints livremente através do Swagger UI sem precisar gerar ou configurar tokens:
 
@@ -55,7 +55,7 @@ Por padrão, a API exige autenticação via Token JWT para os métodos de escrit
 *Nota: Lembre-se de reiniciar a aplicação (`.\mvnw.cmd spring-boot:run`) após salvar a alteração no arquivo para que o Spring Boot aplique as novas regras.*
 
 Como Testar a API (Endpoint por Endpoint)
-Opção 1: Via Swagger UI (Interface Gráfica) (Não recomendo, não está funcionando 100%)
+Opção 1: Via Swagger UI (Interface Gráfica)
 Acesse pelo navegador:
 👉 http://localhost:8080/swagger-ui/index.html
 
@@ -137,5 +137,6 @@ No Linux / macOS:
 Bash
 ./mvnw clean test
 Visualizar o Relatório de Cobertura
+Não utilizar o modo facilitador de testes (vai fazer quebrar alguns)
 Após a execução dos testes, abra o arquivo abaixo no seu navegador para conferir as métricas de linhas e ramificações (branches):
 target/site/jacoco/index.html

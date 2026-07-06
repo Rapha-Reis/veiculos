@@ -97,6 +97,7 @@ public class VeiculoService {
     @Transactional
     public void deletar(Long id) {
         var veiculo = buscarPorId(id);
-        repository.delete(veiculo); 
+        veiculo.setAtivo(false); 
+        repository.save(veiculo); 
     }
 }
